@@ -1,4 +1,5 @@
 import json
+import jsonScraper
 
 def extract_product(product):
     vIDtoColor = {}
@@ -60,7 +61,8 @@ def extract_product(product):
     }     
              
 def main():
-    with open ("theblanks.json", "r") as f:
+    name = jsonScraper.name
+    with open (f"{name}.json", "r") as f:
         data = json.load(f)
         product1 = data["products"][0]
         print(extract_product(product1))
