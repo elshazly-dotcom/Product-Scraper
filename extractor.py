@@ -1,5 +1,5 @@
 import json
-#import jsonScraper
+import jsonScraper
 
 def extract_product(product):
     vIDtoColor = {}
@@ -7,10 +7,10 @@ def extract_product(product):
     sizePosition = 0
     colorOption = None
     for i, option in enumerate(product["options"]):
-                if option["name"] == "Color":
+                if option["name"].lower() == "color":
                     colorPosition = i + 1
                     colorOption = option
-                elif option["name"] == "Size":
+                elif option["name"].lower() == "size":
                     sizePosition = i + 1
 
 
@@ -87,11 +87,11 @@ def extract_product(product):
     }     
              
 def main():
-    #name = jsonScraper.name
-    with open ("nothingRAW.json", "r") as f:
+    name = jsonScraper.name
+    with open (f"{name}RAW.json", "r") as f:
         data = json.load(f)
 
-    with open ("nothing.json", "w") as f:
+    with open (f"{name}.json", "w") as f:
         products = []
         for product in data["products"]:
             products.append(extract_product(product))

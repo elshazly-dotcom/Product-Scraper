@@ -26,11 +26,11 @@ def fetchAllPage(baseUrl, headers):
     while True:
         url  = f"{baseUrl}?page={page}"
         response = requests.get(url, headers= headers)
-
-        if response.status_code == 200:
+        code = response.status_code
+        if code == 200:
             data = response.json()
         else:
-            print(f"ERROR {response.status_code} PLEASE TRY AGAIN AFTER A FEW MINUTES")
+            print(f"ERROR {code} PLEASE TRY AGAIN AFTER A FEW MINUTES")
             flag = False
             break
         
@@ -41,10 +41,13 @@ def fetchAllPage(baseUrl, headers):
         page += 1
         time.sleep(random.randint(1,3))
 
+    print(f"COMPLETED: {flag}", f"STATUS: {code}", f"PAGES: {page - 1}")
     return {
-        "isComplete": flag,
-        "status": response.status_code,
-        "pages": page - 1,
+        "meta": [{
+            "isComplete": flag,
+            "status": response.status_code,
+            "pages": page - 1,
+        }],
         "products": allProducts
     }
 
@@ -57,8 +60,13 @@ def main(url):
     else:
         url += "/collections/all/products.json"
 
+    data = fetchAllPage(url, headers)
+
     with open(f"{name}RAW.json", "w") as f:
-        products = fetchAllPage(url, headers)
-        json.dump(products, f, indent=4)
+        products = data["products"]
+        json.dump({"products": products}, f, indent=4)
+
+    with open(f"{name}_meta.json", "w") as f:
+        json.dump(data["meta"], f, indent=4)
 
 main(url)
