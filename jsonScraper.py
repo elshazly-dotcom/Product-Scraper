@@ -22,30 +22,38 @@ def fetchAllPage(baseUrl, headers):
     allProducts = []
     page = 1
     flag = True
+    code = None
 
     while True:
-        url  = f"{baseUrl}?page={page}"
-        response = requests.get(url, headers= headers)
-        code = response.status_code
+        url = f"{baseUrl}?page={page}"
+
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            code = response.status_code
+        except requests.exceptions.RequestException as e:
+            print(f"NETWORK ERROR: {e} — PLEASE TRY AGAIN AFTER A FEW MINUTES")
+            flag = False
+            break
+
         if code == 200:
             data = response.json()
         else:
             print(f"ERROR {code} PLEASE TRY AGAIN AFTER A FEW MINUTES")
             flag = False
             break
-        
+
         if not isAvailable(data):
             break
 
         allProducts.extend(data["products"])
         page += 1
-        time.sleep(random.randint(1,3))
+        time.sleep(random.randint(1, 3))
 
     print(f"COMPLETED: {flag}", f"STATUS: {code}", f"PAGES: {page - 1}")
     return {
         "meta": [{
             "isComplete": flag,
-            "status": response.status_code,
+            "status": code,
             "pages": page - 1,
         }],
         "products": allProducts
