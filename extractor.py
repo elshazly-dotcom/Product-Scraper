@@ -6,15 +6,30 @@ def extract_product(product):
     colorPosition = 0
     sizePosition = 0
     colorOption = None
+    sizeOption = None
     for i, option in enumerate(product["options"]):
                 if option["name"].lower() == "color":
                     colorPosition = i + 1
                     colorOption = option
                 elif option["name"].lower() == "size":
                     sizePosition = i + 1
+                    sizeOption = option
 
-
-    if colorOption == None:
+    if colorOption == None and sizeOption == None:
+        Images = []
+        for img in product["images"]:
+            Images.append(img["src"])
+        return{
+            "id": product["id"],
+            "title": product["title"],
+            "price": product["variants"][0]["price"],
+            "compare_at_price": product["variants"][0]["compare_at_price"],
+            "available": product["variants"][0]["available"],
+            "colors": None,
+            "sizes": None,
+            "images": Images
+        }
+    elif colorOption == None:
         sizes=[]
         for i in product["variants"]:
             sizes.append({
@@ -43,6 +58,26 @@ def extract_product(product):
         vIDtoColor[vID] = color
 
     colors = colorOption["values"]
+
+    if sizeOption == None:
+        colors = []
+        for i in product["variants"]:
+            colors.append({
+                "color": i[f"option{colorPosition}"],
+                "price": i["price"],
+                "compare_at_price": i["compare_at_price"],
+                "available": i["available"]
+            })
+        Images = []
+        for img in product["images"]:
+            Images.append(img["src"])
+        return{
+            "id": product["id"],
+            "title": product["title"],
+            "sizes": None,
+            "colors": colors,
+            "images": Images
+        }
 
     resultColors = []
 
