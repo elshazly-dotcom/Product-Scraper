@@ -2,127 +2,73 @@ import json
 import jsonScraper
 
 def extract_product(product):
-    vIDtoColor = {}
-    colorPosition = 0
-    sizePosition = 0
-    colorOption = None
-    sizeOption = None
+    colorPosition = None
+    sizePosition = None
+    
+    # 1. Identify option positions for Color and Size
     for i, option in enumerate(product["options"]):
-                if option["name"].lower() == "color":
-                    colorPosition = i + 1
-                    colorOption = option
-                elif option["name"].lower() == "size":
-                    sizePosition = i + 1
-                    sizeOption = option
+        name = option["name"].lower()
+        if name in ["color", "colour"]:
+            colorPosition = i + 1
+        elif name == "size":
+            sizePosition = i + 1
 
-    if colorOption == None and sizeOption == None:
-        Images = []
-        for img in product["images"]:
-            Images.append(img["src"])
-        return{
-            "id": product["id"],
-            "title": product["title"],
-            "price": product["variants"][0]["price"],
-            "compare_at_price": product["variants"][0]["compare_at_price"],
-            "available": product["variants"][0]["available"],
-            "colors": None,
-            "sizes": None,
-            "images": Images
-        }
-    elif colorOption == None:
-        sizes=[]
-        for i in product["variants"]:
-            sizes.append({
-                "size": i[f"option{sizePosition}"],
-                "price": i["price"],
-                "compare_at_price": i["compare_at_price"],
-                "available": i["available"]
-            })
+    colors = {}
+    colorVIDs = {}
 
-        Images = []
-        for img in product["images"]:
-            Images.append(img["src"])
-
-        return{
-            "id": product["id"],
-            "title": product["title"],
-            "colors": None,
-            "sizes": sizes,
-            "images": Images
-        }
-
+    # 2. Group all variants by their respective color
     for variant in product["variants"]:
-        if colorPosition:   
-            color = variant[f"option{colorPosition}"]
-        vID = variant["id"]
-        vIDtoColor[vID] = color
+        color_val = variant[f"option{colorPosition}"] if colorPosition else "Default"
+        size_val = variant[f"option{sizePosition}"] if sizePosition else "One Size"
+        
+        if not color_val: color_val = "Default"
+        if not size_val: size_val = "One Size"
 
-    colors = colorOption["values"]
+        if color_val not in colors:
+            colors[color_val] = []
+            colorVIDs[color_val] = []
 
-    if sizeOption == None:
-        colors = []
-        for i in product["variants"]:
-            colors.append({
-                "color": i[f"option{colorPosition}"],
-                "price": i["price"],
-                "compare_at_price": i["compare_at_price"],
-                "available": i["available"]
-            })
-        Images = []
+        colors[color_val].append({
+            "size": size_val,
+            "price": variant["price"],
+            "compare_at_price": variant["compare_at_price"],
+            "available": variant["available"]
+        })
+        
+        colorVIDs[color_val].append(variant["id"])
+
+    # 3. Match product images to the correct color group using variant IDs
+    result_colors = []
+    
+    for color_val, sizes in colors.items():
+        images = []
+        
         for img in product["images"]:
-            Images.append(img["src"])
-        return{
-            "id": product["id"],
-            "title": product["title"],
-            "sizes": None,
-            "colors": colors,
-            "images": Images
-        }
+            if colorPosition and color_val != "Default":
+                if img["variant_ids"]:
+                    for v_id in img["variant_ids"]:
+                        if v_id in colorVIDs[color_val]:
+                            images.append(img["src"])
+                            break 
+            else:
+                images.append(img["src"])
 
-    resultColors = []
-
-    for color in colors:
-        matchingVariants = []
-        for i in product["variants"]:
-            if vIDtoColor[i["id"]] == color:
-                matchingVariants.append(i)
-
-        sizes=[]
-        matchingVariantsIds = []
-        for j in matchingVariants:
-            matchingVariantsIds.append(j["id"])
-            sizes.append({
-                "size": j[f"option{sizePosition}"],
-                "price": j["price"],
-                "compare_at_price": j["compare_at_price"],
-                "available": j["available"]
-            })
-
-        Images = []
-        for img in product["images"]:
-           if not img["variant_ids"]:
-                continue
-           else:
-               for vId in img["variant_ids"]:
-                if vId in matchingVariantsIds:
-                    Images.append(img["src"])
-                    break
-
-        resultColors.append({
-            "color": color,
-            "sizes": sizes,
-            "images": Images
+        result_colors.append({
+            "color": color_val,
+            "images": images,
+            "sizes": sizes 
         })
 
-
-    return{
+    # 4. Return unified product structure
+    return {
         "id": product["id"],
-        "title": product["title"],
-        "colors": resultColors
+        "title": product["title"], 
+        "colors": result_colors
     }     
              
 def main():
     name = jsonScraper.name
+    
     with open (f"{name}RAW.json", "r") as f:
         data = json.load(f)
 
@@ -130,6 +76,7 @@ def main():
         products = []
         for product in data["products"]:
             products.append(extract_product(product))
+            
         json.dump(products, f, indent=4)
     
 main()
