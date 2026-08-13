@@ -1,4 +1,4 @@
-Shopify Product Scraper
+#Shopify Product Scraper
 
 A python script to grab product names, prices, sizes, colorways, images, and more from shopify stores through the use of there public /products.json API endpoint. The program handles shopify API pagination and rate limitations for you and produces output in an extremely clean and easily readable JSON output, cleverly chunking product images and variants into corresponding colors.
 
