@@ -38,18 +38,22 @@ def extract_product(product):
         colorVIDs[color_val].append(variant["id"])
 
     # 3. Match product images to the correct color group using variant IDs
+    # 3. Match product images to the correct color group using variant IDs
     result_colors = []
-    
+
+    # If this product never tags any image with variant_ids, treat all images as shared across colors
+    any_tagged = any(img["variant_ids"] for img in product["images"])
+
     for color_val, sizes in colors.items():
         images = []
-        
+
         for img in product["images"]:
-            if colorPosition and color_val != "Default":
+            if colorPosition and color_val != "Default" and any_tagged:
                 if img["variant_ids"]:
                     for v_id in img["variant_ids"]:
                         if v_id in colorVIDs[color_val]:
                             images.append(img["src"])
-                            break 
+                            break
             else:
                 images.append(img["src"])
 
