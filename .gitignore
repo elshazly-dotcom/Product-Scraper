@@ -1,2 +1,5 @@
 main.py
 .vscode/settings.json
+__pycache__/
+*.json
+.gitignore
