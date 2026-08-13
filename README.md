@@ -17,7 +17,7 @@ A python 3.x version needs to be installed to the system and can be accessed loc
 
 Install the necessary requirements using pip. These should then install with no issues:
 
-pip install requests fake-useragent
+pip install -r requirements.txt
 
 (This would normally suggest a requirements.txt file, and indeed for an in-depth repository of this script: it would also require one. However, we avoid this for an exceptionally short, clean and to-the-point code-repo!)
 
